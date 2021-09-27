@@ -83,7 +83,7 @@ if html.status_code == 200:
     scrapper(html)
     path_creator(rev_line)
     downloader(pdf_address_list, path_global)
-    #merger(path_global)
+    merger(path_global)
 else:
     print("Page is not available, finishing. Status code: ", html.status_code)
     os.exit()
