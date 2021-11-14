@@ -3,18 +3,19 @@ import requests
 import os
 import wget
 import sys
+import re
 
 revision_check = ""
 
 sr22t_amm_html_g6 = "http://servicecenters.cirrusdesign.com/tech_pubs/SR2X/pdf/amm/SR22+/html/ammtoc.html"
 sr22t_amm_html_g5 =  "http://servicecenters.cirrusdesign.com/tech_pubs/SR2X/pdf/amm/SR22/html/ammtoc.html"
-sr20_amm_g6 = ""
-sr20_amm_g5 = ""
+sr20_amm_g6 = "http://servicecenters.cirrusdesign.com/tech_pubs/SR2X/pdf/amm/SR20+/html/ammtoc.html"
+sr20_amm_g5 = "http://servicecenters.cirrusdesign.com/tech_pubs/SR2X/pdf/amm/SR20/html/ammtoc.html"
 
-sr22t_base_address_g6 = "http://servicecenters.cirrusdesign.com/tech_pubs/SR2X/pdf/amm/SR22+/"
-sr22t_base_address_g5 = "http://servicecenters.cirrusdesign.com/tech_pubs/SR2X/pdf/amm/SR22/"
-sr20_base_address_g6 = ""
-sr20_base_address_g5 = ""
+sr22t_amm_base_address_g6 = "http://servicecenters.cirrusdesign.com/tech_pubs/SR2X/pdf/amm/SR22+/"
+sr22t_amm_base_address_g5 = "http://servicecenters.cirrusdesign.com/tech_pubs/SR2X/pdf/amm/SR22/"
+sr20_amm_base_address_g6 = "http://servicecenters.cirrusdesign.com/tech_pubs/SR2X/pdf/amm/SR20+/"
+sr20_amm_base_address_g5 = "http://servicecenters.cirrusdesign.com/tech_pubs/SR2X/pdf/amm/SR20/"
 
 pdf_address_list = []
 
@@ -27,7 +28,7 @@ def bar_progress(current, total, width=80):
   sys.stdout.write("\r" + progress_message)
   sys.stdout.flush()
 
-def scrapper(file):
+def scrapper(file, link):
     global soup
     global folder_name
     soup = BeautifulSoup(file.content, 'html.parser')
@@ -39,7 +40,7 @@ def scrapper(file):
             folder_name = (rev_line.text).replace("/", "-")
     for line in content_check:
         for id in line.find_all("a"):
-            pdf_address_list.append(sr22t_base_address_g6 + id["href"][3:])
+            pdf_address_list.append(link + id["href"][3:])
             #print(base_address + id["href"][3:])
     print(f"{len(pdf_address_list)} files found!")
 
@@ -51,8 +52,8 @@ def makeFolder():
 
 def downloader(link_list):
     enum = 1
-
     for link in (link_list):
+        file_name = (re.findall("([^\/]+$)", link)[0])
         wget.download(link, bar=bar_progress, out=folder_name)
         print(f" | File {link} downloaded! Total: [{enum}/{len(pdf_address_list)}] [{round(((enum/len(pdf_address_list))*100), 2)} %]" )
         enum+=1
@@ -63,9 +64,9 @@ def downloader(link_list):
 if html.status_code == 200:
     print("Cirrus Technical Documentation Scrapper v0.1")
     print("Page Available, status code: ", html.status_code)
-    scrapper(html)
+    scrapper(html, sr22t_amm_base_address_g6)
     makeFolder()
-    #downloader(pdf_address_list)
+    downloader(pdf_address_list)
 else:
     print("Page is not available, finishing. Status code: ",html.status_code)
     os.exit()
